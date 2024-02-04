@@ -13,33 +13,13 @@ ECHO.
 
 set ffmpegPath="C:\Program Files\Simple Video Editor\ffmpeg.exe"
 
-rem Pair first two frames and show user, asking for input if they want to continue with current polarity, or swap because it is misaligned
-
-rem use info from https://superuser.com/questions/1615310/how-to-use-ffmpeg-blend-difference-filter-mode-to-identify-frame-differences-bet to automatically figure out what is what so we don't have to ask the user. It may be possible that just knowing if the frame is black or not will tell us everything, as if the flicker doesn't get misaligned, it should always go black-white
-
-rem %ffmpegPath% -i %1 -filter_complex "[0] split [a][b],[a]select="eq(n\,0)"[one],[b]select="eq(n\,1)"[two],[one][two]blend=all_mode=difference" userCheckTemp.png
+rem Use info from https://superuser.com/questions/1615310/how-to-use-ffmpeg-blend-difference-filter-mode-to-identify-frame-differences-bet to automatically figure out what is what so we don't have to ask the user. Just knowing if the frame is black or not will tell us everything, as if the flicker doesn't get misaligned, it should always go black-white or white-black without any change.
 
 %ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,0)" -an -f apng -y tempFrame1.png
 %ffmpegPath% -hide_banner -i tempFrame1.png -vf "blackdetect=d=0.01:pix_th=0.05:pic_th=0.1" -an -f null - 2> tempBlackDetect.txt
 
 findstr "black_start:0 black_end:" tempBlackDetect.txt && goto :isBlack || goto :isWhite
 
-rem setlocal EnableExtensions EnableDelayedExpansion
-rem cls
-rem @ECHO OFF
-rem set test="H:\Downloads\Dumptest\Frames\GALE01_2022-07-26_01-32-46_0.avi"
-rem set blackCheckCmd=%ffmpegPath% -i %1 -vf "select="eq(n\,0)",blackdetect=d=0.01:pix_th=0.05:pic_th=0.1" -an -f null -
-rem set blackCheckCmd=run %ffmpegPath% -i %test% -vf "select="eq(n\,0)",blackdetect=d=0.01:pix_th=0.05:pic_th=0.1" -an -f null -
-rem FOR /F "tokens=* USEBACKQ" %%F IN (`%blackCheckCmd%`) DO (SET var=%%F)
-rem ECHO %var%
-
-rem Open the file
-rem userCheckTemp.png
-
-rem set /p FirstBlack=Is the first frame black? (y/n):
-rem set /p Aligned=Is this a frame pair? (y/n):
-
-rem if /I "%FirstBlack%"=="y" goto isBlack
 :isBlack
 ECHO Detected black start frame
 set polarity1=n
@@ -60,7 +40,6 @@ del /F tempBlackDetect.txt
 if /I "%Aligned%"=="y" goto aligned
 goto misaligned
 :aligned
-rem It makes absolutely no sense that swapping 1 and 2 here causes misalignment, but i guess thats whats needed in the misaligned thing anyways? but isnt that because of the first frame ignorance??
 set select1="mod(%polarity2%\,2)"
 set select2="mod(%polarity1%\,2)"
 set select3=%select1%
@@ -73,12 +52,9 @@ set select3=%select1%
 :endAlignment
 set ptsAdjust=,setpts=PTS-STARTPTS
 
-rem Show user first frame, ask if it is black so we can choose a frameset
-
 rem Take a 120 FPS video input, splitting it into white/black
 rem Extract alphamap video from all pairs
 rem %ffmpegPath% -i %1 -filter_complex "[0] asplit=3 [a][b][c],[a]select="mod(n-1\,2)"[evens],[b]select="mod(n\,2)"[odds],[evens]format=gbrp[v1],[odds]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],
-
 
 rem Max channels of extracted alpha, setting each to the max of r,g,b
 rem [alphaMap]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],
