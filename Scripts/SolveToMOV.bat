@@ -1,1 +1,1 @@
-call "%~dp0\AlphaSolve.bat" "%~1" "mov"
+"%~dp0\AlphaSolve.bat" "%~1" "mov"

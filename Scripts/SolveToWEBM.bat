@@ -1,1 +1,1 @@
-call "%~dp0\AlphaSolve.bat" "%~1" "webm"
+"%~dp0\AlphaSolve.bat" "%~1" "webm"

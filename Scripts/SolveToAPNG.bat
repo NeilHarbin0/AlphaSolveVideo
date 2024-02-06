@@ -1,1 +1,1 @@
-call "%~dp0\AlphaSolve.bat" "%~1" "png"
+"%~dp0\AlphaSolve.bat" "%~1" "png"
