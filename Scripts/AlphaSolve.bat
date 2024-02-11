@@ -14,7 +14,23 @@ ECHO Batch inputs:
 ECHO File= %1
 ECHO Ext= %2
 ECHO.
-set ffmpegPath="C:\Program Files\Simple Video Editor\ffmpeg.exe"
+
+rem Check a few places where ffmpeg might be
+ECHO Checking for ffmpeg.exe
+rem Expected path for downloaded zip
+set ffmpegPath="..\ffmpeg.exe"
+rem Path for working within repo
+if exist "..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" (
+    set ffmpegPath="..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe"
+)
+rem Path for SVE users
+if exist "C:\Program Files\Simple Video Editor\ffmpeg.exe" (
+    set ffmpegPath="C:\Program Files\Simple Video Editor\ffmpeg.exe"
+)
+rem Path for people who put the exe in the same folder as the scripts or system PATH because why not
+if exist "ffmpeg.exe" (
+    set ffmpegPath="ffmpeg.exe"
+)
 set outputExt=%~2
 if [%2] == [] set outputExt=png
 
