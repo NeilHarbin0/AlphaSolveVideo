@@ -1,0 +1,45 @@
+$Increase Input Timing Accuracy [Dan Salvato]
+*Reorganizes input polls to remove drift that causes occasional input lag.
+*Also doubles the controller's poll rate.
+C21A4DA0 00000003
+901C0000 3D808001
+618C95FC 7D8903A6
+4E800421 00000000
+08402cc4 004e0400
+20020004 00000000
+04019860 4bfffd9d
+
+$(EPILEPSY WARNING) Flicker Background Black/White asm v3 [NeilHarbin0]
+C21a503c 00000008
+3E808045 62942C70
+82740000 2C13FF00
+41820018 3A6000FF
+9A740000 9A740001
+9A740002 48000014
+3A600000 9A740000
+9A740001 9A740002
+38600000 00000000
+
+$120 fps mode [internetexplorer, doqtor kirby]
+04432A2C 00149970
+
+$Disable Dreamland Background [NeilHarbin0]
+04210830 60000000
+
+$Disable Battlefield Background + Particles [NeilHarbin0]
+*Disables both Battlefield background styles, and particles. Background will instead be pure black, allowing for easy recording and compression.
+04219d10 60000000
+04219d1c 60000000
+04219d24 60000000
+
+$Reduce Debug Develop Animation Info Display Lag by 1 Frame (1.02) [NeilHarbin0]
+*Fixes an issue where the debug animation info display was out of sync with the actual displayed frame. This caused extra frames with mismatched information to be displayed when using frame advance, and caused real time recordings to always have a mismatch of what animation is displayed, and what the info says.
+041a4f8c 481ebd71
+041a4f90 81990030
+041a4f94 280c0000
+041a4f98 4182000c
+041a4f9c 7d8803a6
+041a4fa0 4e800021
+
+$Disable Screen Shake [Achilles1515]
+04030e44 4e800020
