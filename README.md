@@ -37,13 +37,11 @@ The following process is applied to each frame pair in the video.
 
 Two source frames with black and white backgrounds are used to solve for the proper transparency of the subject.
 
-![Source Black](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/ExSourceBlack.png?raw=true)
-![Source White](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/ExSourceWhite.png?raw=true)
+<img src='https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/ExSourceBlack.png?raw=true' width='400'><img src='https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/ExSourceWhite.png?raw=true' width='400'>
 
 The technique can produce an alpha map and the fully transparent subject.
 
-![Alpha Map](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/MethodAlphaSolveMap.png?raw=true)
-![Solved Transparency](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/MethodAlphaSolve.png?raw=true)
+<img src='https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/MethodAlphaSolveMap.png?raw=true' width='400'><img src='https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/MethodAlphaSolve.png?raw=true' width='400'>
 
 For the video solving script, there is a bit of detection in seeing if the first frame is black or white, followed by detection of black->white or white-black pairs. With this information, the specific frames that need to be compared are known, extracted from the video, and used to generate the outputs.
 
