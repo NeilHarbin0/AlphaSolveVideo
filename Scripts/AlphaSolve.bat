@@ -143,14 +143,13 @@ rem [c][alphaMax]alphamerge[transparent1],
 rem use alphaboost to boost the color intensity to the proper target values
 rem [transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))'"
 
-rem %ffmpegPath% -i %1 -filter_complex "[0] split=3 [a][b][c],[a]select=%select1%%ptsAdjust%[blk],[b]select=%select2%%ptsAdjust%[wht],[c]select=%select3%%ptsAdjust%[blk2],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],[alphaMap]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],[blk2]setpts=0.5*PTS[d],[d][alphaMax]alphamerge[transparent1],[transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))',split [i][k];[i] palettegen [p];[k]fifo[m];[m][p] paletteuse=dither=bayer" -q:v 0 "fullTransparent - %~n1.gif"
-
 ECHO Checking output extension "%outputExt%"
 ECHO Solving for video output...
 if %outputExt%==mkv goto ffv1Ext
 if %outputExt%==mov goto ffv1Ext
 if %outputExt%==avi goto ffv1Ext
 if %outputExt%==webm goto vp9Select
+if %outputExt%==gif goto gifSelect
 goto apngSelect
 
 :ffv1Ext
@@ -161,6 +160,11 @@ goto endExtSelect
 :vp9Select
 rem This works WEBM, though many players produce ugly artifacts
 %ffmpegPath% -v error -stats -i %1 -filter_complex "[0] split=3 [a][b][c],[a]select=%select1%%ptsAdjust%[blk],[b]select=%select2%%ptsAdjust%[wht],[c]select=%select3%%ptsAdjust%[blk2],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],[alphaMap]split=2[alphaMapUse][out2],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],[blk2]setpts=0.5*PTS[d],[d][alphaMax]alphamerge[transparent1],[transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))',format=argb[out1]" -map "[out1]" -c:v vp9 -crf 0 -pix_fmt yuva420p "%~dp1\fullTransparent - %~n1.%outputExt%" -map "[out2]" -c:v vp9 -crf 0 -pix_fmt yuva420p "%~dp1\alphaMap - %~n1.%outputExt%"
+goto endExtSelect
+
+:gifSelect
+rem This works GIF, though 1 bit depth for alpha is not ideal
+%ffmpegPath% -v error -stats -i %1 -filter_complex "[0] split=3 [a][b][c],[a]select=%select1%%ptsAdjust%[blk],[b]select=%select2%%ptsAdjust%[wht],[c]select=%select3%%ptsAdjust%[blk2],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],[alphaMap]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],[blk2]setpts=0.5*PTS[d],[d][alphaMax]alphamerge[transparent1],[transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))',split [i][k];[i] palettegen [p];[k]fifo[m];[m][p] paletteuse=dither=bayer" -q:v 0 "fullTransparent - %~n1.%outputExt%"
 goto endExtSelect
 
 :apngSelect
