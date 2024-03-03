@@ -11,14 +11,14 @@ Download the latest release zip from the [releases page](https://github.com/Neil
 
 1. You will need Dolphin emulator that supports lossless .avi output via framedump. Tested and working with Dolphin 5.0-17995. Find output path under `Options` -> `Configuration` -> `Paths` -> `Dump Path`.
 
-2. Set up your SSBM gecko codes to include and enable all required codes (only Dreamland and BF background disabling codes included by default). [Required codes](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/master/AlphaSolve/Resources/Required%20Codes.txt) can be found in the Resources folder.
+2. Set up your SSBM gecko codes to include and enable all required codes (only Dreamland and BF background disabling codes included by default). [Required codes](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/master/Resources/Required%20Codes.txt) can be found in the Resources folder.
 
     - `120 FPS` mode will allow two separate frames with different background colors without physics advancing
     - `Increase Input Timing Accuracy` will ensure black->white frame pairs always stay in the same order
     - `(EPILEPSY WARNING) Flicker Background Black/White` will flash the screen black/white each physics frame to enable the alpha solving technique
     - Disable background codes are required so that the flickering background can be seen
     - `Reduce Debug Develop` lag code ensures accurate frame information in rare situations
-    - [Optional codes](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/master/AlphaSolve/Resources/Optional%20Codes.txt) that can help or improve quality of documented content are also available in the same Resources folder.
+    - [Optional codes](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/master/Resources/Optional%20Codes.txt) that can help or improve quality of documented content are also available in the same Resources folder.
 
 3. Record gameplay via `Dolphin Movie` -> `Dump Frames`, selecting it again when you want to stop recording. The quality offered by this feature is important as the solver is sensitive to small artifacts that may appear with other recording techniques, especially when the recording is not perfectly synchronized, and frames are skipped.
 
