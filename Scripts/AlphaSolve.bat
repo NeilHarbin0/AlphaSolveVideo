@@ -10,7 +10,7 @@ rem (Allows white->black pairs to occur on the same physics frame, instead of ev
 ECHO 3. 120 fps mode 
 ECHO 4. (EPILEPSY WARNING) Flicker Background Black/White asm v3
 ECHO.
-ECHO Batch inputs:
+ECHO #Batch inputs
 ECHO WorkingDir= %cd%
 ECHO BatchDir= %~dp0
 ECHO File= %1
@@ -18,11 +18,14 @@ ECHO Ext= %2
 ECHO.
 
 rem Check a few places where ffmpeg might be
-ECHO Checking for ffmpeg.exe
+ECHO #Checking for ffmpeg.exe
 rem Expected path for downloaded zip
 set ffmpegPath="%~dp0..\ffmpeg.exe"
+if exist "%~dp0..\ffmpeg.exe" (
+    ECHO Detected ffmpeg in script parent folder
+)
 rem Path for working within repo
-if exist "..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" (
+if exist "%~dp0..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" (
     ECHO Detected ffmpeg in packages folder
     set ffmpegPath="%~dp0..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe"
 )
@@ -36,64 +39,106 @@ if exist "ffmpeg.exe" (
     ECHO Detected ffmpeg in working directory
     set ffmpegPath="ffmpeg.exe"
 )
+ECHO.
+
 set outputExt=%~2
 if [%2] == [] set outputExt=png
 
 rem Use info from https://superuser.com/questions/1615310/how-to-use-ffmpeg-blend-difference-filter-mode-to-identify-frame-differences-bet to automatically figure out what is what so we don't have to ask the user. Just knowing if the frame is black or not will tell us everything, as if the flicker doesn't get misaligned, it should always go black-white or white-black without any change.
 
-ECHO Detecting first frame background color
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,0)" -an -f apng -y tempFrame0.png >nul 2>&1
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempFrame1.png >nul 2>&1
-%ffmpegPath% -hide_banner -i tempFrame0.png -vf "blackdetect=d=0.01:pix_th=0.05:pic_th=0.1" -an -f null - 2> tempBlackDetect.txt
+ECHO #Checking background color
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,0)" -an -f apng -y tempFrame0.png >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempFrame1.png >nul 2>&1
 
-findstr "black_start:0 black_end:" tempBlackDetect.txt && goto :isBlack || goto :isWhite
+call "%~dp0\Brightest.bat" %ffmpegPath% tempFrame0.png tempFrame1.png
+set whiteIndex=%errorlevel%
+if %whiteIndex%==0 (
+    goto :isWhite
+)
+goto :isBlack
+
 
 :isBlack
 ECHO Detected black start frame
 set polarity1=n
 set polarity2=n-1
+set firstColor=BLACK
+set secondColor=WHITE
 ECHO Exporting black frame
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,0)" -an -f apng -y tempBlkFrameA.png  >nul 2>&1
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,2)" -an -f apng -y tempBlkFrameB.png  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,0)" -an -f apng -y tempBlkFrameA.png  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,2)" -an -f apng -y tempBlkFrameB.png  >nul 2>&1
 goto endPolarity
 :isWhite
-ECHO Failed to detect black start frame, assuming white
+ECHO Detected white start frame
 set polarity1=n-1
 set polarity2=n
+set firstColor=WHITE
+set secondColor=BLACK
 ECHO Exporting black frame
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempBlkFrameA.png  >nul 2>&1
-%ffmpegPath% -hide_banner -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempBlkFrameB.png  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempBlkFrameA.png  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -vf "select=eq(n\,1)" -an -f apng -y tempBlkFrameB.png  >nul 2>&1
 :endPolarity
 ECHO.
 
 rem Check alignment by taking the first 3 frames, applying the technique both ways, then checking the images against eachother
-ECHO Detecting frame pair alignment 0-1
+ECHO #Checking frame pair alignment
+ECHO Processing alignment 0-1
 
+set difThreshold=2
 rem frame 0-1
-%ffmpegPath% -hide_banner -i %1 -filter_complex "[0] split=2 [a][b],[a]select=eq(n\,1)[blk],[b]select=eq(n\,0)[wht],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[alphaMapUse],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax]" -map "[alphaMax]" -q:v 0 -f apng "alphaMapAlignmentTest0-1.png"  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -filter_complex "[0] split=2 [a][b],[a]select=eq(n\,1)[blk],[b]select=eq(n\,0)[wht],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[alphaMapUse],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax]" -map "[alphaMax]" -q:v 0 -f apng "alphaMapAlignmentTest0-1.png"  >nul 2>&1
 
 rem Use lighten blend filter as a check to see if the alpha map is correct as lightening should do nothing with a proper map, but create abberations with improper maps
-%ffmpegPath% -hide_banner -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif0-1.png" >nul 2>&1
+rem Threshold the output to maximize detection possibility via blackdetect
+rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif0-1.png" >nul 2>&1
 
-%ffmpegPath% -hide_banner -i "lightenedDif0-1.png" -filter_complex "blackdetect=d=0.01:pix_th=0.01:pic_th=0.9985" -an -f null - 2> tempDifDetect0-1.txt
+%ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='min(max(0,r(X,Y)-%difThreshold%)*255,255)':g='min(max(0,g(X,Y)-%difThreshold%)*255,255)':b='min(max(0,b(X,Y)-%difThreshold%)*255,255)'" -f apng "lightenedDif0-1.png" >nul 2>&1
 
-ECHO Detecting frame pair alignment 1-2
+rem %ffmpegPath% -hide_banner -y -i "lightenedDif0-1.png" -filter_complex "blackdetect=d=0.01:pix_th=0.01:pic_th=0.9985" -an -f null - 2> tempDifDetect0-1.txt
+
+rem findstr sets errorlevel to 0 on found
+rem findstr "black_start:0 black_end:" tempDifDetect0-1.txt
+rem set detections=%errorlevel%
+
+ECHO Processing alignment 1-2
 rem frame 1-2
-%ffmpegPath% -hide_banner -i %1 -filter_complex "[0] split=2 [a][b],[a]select=eq(n\,2)[blk],[b]select=eq(n\,1)[wht],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[alphaMapUse],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax]" -map "[alphaMax]" -q:v 0 -f apng "alphaMapAlignmentTest1-2.png"  >nul 2>&1
+%ffmpegPath% -hide_banner -y -i %1 -filter_complex "[0] split=2 [a][b],[a]select=eq(n\,2)[blk],[b]select=eq(n\,1)[wht],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[alphaMapUse],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax]" -map "[alphaMax]" -q:v 0 -f apng "alphaMapAlignmentTest1-2.png"  >nul 2>&1
 
 rem Use lighten blend filter as a check to see if the alpha map is correct as lightening should do nothing with a proper map, but create abberations with improper maps
-%ffmpegPath% -hide_banner -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif1-2.png" >nul 2>&1
+rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif1-2.png" >nul 2>&1
 
-%ffmpegPath% -hide_banner -i "lightenedDif0-1.png" -filter_complex "blackdetect=d=0.01:pix_th=0.01:pic_th=0.9985" -an -f null - 2> tempDifDetect1-2.txt
+%ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='min(max(0,r(X,Y)-%difThreshold%)*255,255)':g='min(max(0,g(X,Y)-%difThreshold%)*255,255)':b='min(max(0,b(X,Y)-%difThreshold%)*255,255)'" -f apng "lightenedDif1-2.png" >nul 2>&1
 
-findstr "black_start:0 black_end:" tempDifDetect0-1.txt && goto :firstPair || goto :secondPair
+rem %ffmpegPath% -hide_banner -y -i "lightenedDif1-2.png" -filter_complex "blackdetect=d=0.01:pix_th=0.01:pic_th=0.9985" -an -f null - 2> tempDifDetect1-2.txt
 
-:firstPair
-Echo Pairs are aligned 0-1
+rem findstr "black_start:0 black_end:" tempDifDetect1-2.txt
+rem set /a "detections=detections+%errorlevel%"
+rem set pairAssumption=Pairs
+rem if %detections%==0 (
+rem     Echo WARNING: Failed to detect frame pair alignment, both pairs look good, output may contain ghosting if guess is incorrect.
+rem 	set pairAssumption=Guessing pairs
+rem )
+rem if %detections%==2 (
+rem     Echo WARNING: Failed to detect frame pair alignment, both pairs look bad, output may contain ghosting if guess is incorrect.
+rem 	set pairAssumption=Guessing pairs
+rem )
+rem 
+rem findstr "black_start:0 black_end:" tempDifDetect0-1.txt >nul 2>&1 && goto :firstPairAligned || goto :secondPairAligned
+
+call "%~dp0\Brightest.bat" %ffmpegPath% lightenedDif0-1.png lightenedDif1-2.png
+set badPairIndex=%errorlevel%
+if %badPairIndex%==0 (
+    goto :secondPairAligned
+)
+goto :firstPairAligned
+
+
+:firstPairAligned
+Echo Pairs are aligned 0-1 (%firstColor%-%secondColor%)
 set Aligned=y
 goto endAlignmentCheck
-:secondPair
-Echo Pairs are not aligned 0-1, offset +1
+:secondPairAligned
+Echo Pairs are aligned 1-2 (%secondColor%-%firstColor%), offset +1
 set Aligned=n
 :endAlignmentCheck
 ECHO.
@@ -104,15 +149,17 @@ rem pause
 ECHO Cleaning up temp files...
 del /F tempFrame0.png
 del /F tempFrame1.png
-del /F tempBlackDetect.txt
+rem del /F tempBlackDetect.txt
 del /F alphaMapAlignmentTest0-1.png
 del /F alphaMapAlignmentTest1-2.png
-del /F tempDifDetect0-1.txt
-del /F tempDifDetect1-2.txt
+rem del /F tempDifDetect0-1.txt
+rem del /F tempDifDetect1-2.txt
 del /F tempBlkFrameA.png
 del /F tempBlkFrameB.png
 del /F lightenedDif0-1.png
 del /F lightenedDif1-2.png
+rem del /F lightenedDifT0-1.png
+rem del /F lightenedDifT1-2.png
 
 if /I "%Aligned%"=="y" goto aligned
 goto misaligned
