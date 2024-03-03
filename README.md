@@ -47,7 +47,7 @@ For the video solving script, there is a bit of detection in seeing if the first
 
 ![Solved Transparency](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/Demo.png?raw=true)
 
-*Warning: It is possible that this detection fails, leading to strange chromatic edged outputs. I hope to improve this in the future, but if it happens to you, please notify me so I can help. Otherwise you can try swapping isBlack and isWhite tags in AlphaSolve.bat.*
+*Warning: It is possible that this detection fails, leading to strange chromatic edged outputs. I hope to improve this in the future, but if it happens to you, please notify me so I can help. Otherwise you can try swapping isBlack and isWhite tags in AlphaSolve.bat, or swapping firstPair and secondPair.*
 
 ## Other "Worse" Approaches
 Below are images of other approaches which generally miss partial transparency, leading to the inability to place your transparent image onto any background with accurate color. They also tend to break down at low resolutions around the edges.
