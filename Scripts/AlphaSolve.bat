@@ -11,6 +11,8 @@ ECHO 3. 120 fps mode
 ECHO 4. (EPILEPSY WARNING) Flicker Background Black/White asm v3
 ECHO.
 ECHO Batch inputs:
+ECHO WorkingDir= %cd%
+ECHO BatchDir= %~dp0
 ECHO File= %1
 ECHO Ext= %2
 ECHO.
@@ -21,14 +23,17 @@ rem Expected path for downloaded zip
 set ffmpegPath="%~dp0..\ffmpeg.exe"
 rem Path for working within repo
 if exist "..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" (
+    ECHO Detected ffmpeg in packages folder
     set ffmpegPath="%~dp0..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe"
 )
 rem Path for SVE users
 if exist "C:\Program Files\Simple Video Editor\ffmpeg.exe" (
+    ECHO Detected ffmpeg in SVE installation
     set ffmpegPath="C:\Program Files\Simple Video Editor\ffmpeg.exe"
 )
 rem Path for people who put the exe in the same folder as the scripts or system PATH because why not
 if exist "ffmpeg.exe" (
+    ECHO Detected ffmpeg in working directory
     set ffmpegPath="ffmpeg.exe"
 )
 set outputExt=%~2
