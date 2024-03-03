@@ -18,10 +18,10 @@ ECHO.
 rem Check a few places where ffmpeg might be
 ECHO Checking for ffmpeg.exe
 rem Expected path for downloaded zip
-set ffmpegPath="..\ffmpeg.exe"
+set ffmpegPath="%~dp0..\ffmpeg.exe"
 rem Path for working within repo
 if exist "..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" (
-    set ffmpegPath="..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe"
+    set ffmpegPath="%~dp0..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe"
 )
 rem Path for SVE users
 if exist "C:\Program Files\Simple Video Editor\ffmpeg.exe" (
