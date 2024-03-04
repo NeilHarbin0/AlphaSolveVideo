@@ -92,6 +92,8 @@ rem Use lighten blend filter as a check to see if the alpha map is correct as li
 rem Threshold the output to maximize detection possibility via blackdetect
 rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif0-1.png" >nul 2>&1
 
+rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif0-1.png" >nul 2>&1
+
 %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest0-1.png" -i "tempBlkFrameA.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='min(max(0,r(X,Y)-%difThreshold%)*255,255)':g='min(max(0,g(X,Y)-%difThreshold%)*255,255)':b='min(max(0,b(X,Y)-%difThreshold%)*255,255)'" -f apng "lightenedDif0-1.png" >nul 2>&1
 
 rem %ffmpegPath% -hide_banner -y -i "lightenedDif0-1.png" -filter_complex "blackdetect=d=0.01:pix_th=0.01:pic_th=0.9985" -an -f null - 2> tempDifDetect0-1.txt
@@ -105,6 +107,8 @@ rem frame 1-2
 %ffmpegPath% -hide_banner -y -i %1 -filter_complex "[0] split=2 [a][b],[a]select=eq(n\,2)[blk],[b]select=eq(n\,1)[wht],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[alphaMapUse],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax]" -map "[alphaMax]" -q:v 0 -f apng "alphaMapAlignmentTest1-2.png"  >nul 2>&1
 
 rem Use lighten blend filter as a check to see if the alpha map is correct as lightening should do nothing with a proper map, but create abberations with improper maps
+rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif1-2.png" >nul 2>&1
+
 rem %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'" -f apng "lightenedDif1-2.png" >nul 2>&1
 
 %ffmpegPath% -hide_banner -y -i "alphaMapAlignmentTest1-2.png" -i "tempBlkFrameB.png" -filter_complex "[0]split=2[alpha1][alpha2],[alpha1]blend=all_mode=lighten[lighten],[alpha2][lighten]blend=all_mode=difference,geq=a='255':r='min(max(0,r(X,Y)-%difThreshold%)*255,255)':g='min(max(0,g(X,Y)-%difThreshold%)*255,255)':b='min(max(0,b(X,Y)-%difThreshold%)*255,255)'" -f apng "lightenedDif1-2.png" >nul 2>&1
@@ -212,7 +216,7 @@ goto endExtSelect
 :gifSelect
 ECHO Solving for gif, this may appear stuck for many seconds before the gif starts to build...
 rem This works GIF, though 1 bit depth for alpha is not ideal
-%ffmpegPath% -v error -stats -i %1 -filter_complex "[0] split=3 [a][b][c],[a]select=%select1%%ptsAdjust%[blk],[b]select=%select2%%ptsAdjust%[wht],[c]select=%select3%%ptsAdjust%[blk2],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],[alphaMap]split=2[alphaMapUse][out2],[out2]split [ia][ka];[ia] palettegen [pa];[ka]fifo[ma];[ma][pa] paletteuse=dither=bayer[out3],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],[blk2]setpts=0.5*PTS[d],[d][alphaMax]alphamerge[transparent1],[transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))',split [i][k];[i] palettegen [p];[k]fifo[m];[m][p] paletteuse=dither=bayer:alpha_threshold=120" -q:v 0 "%~dp1\fullTransparent - %~n1.%outputExt%" -map "[out3]" -q:v 0 "%~dp1\alphaMap - %~n1.%outputExt%"
+%ffmpegPath% -v error -stats -i %1 -filter_complex "[0] split=3 [a][b][c],[a]select=%select1%%ptsAdjust%[blk],[b]select=%select2%%ptsAdjust%[wht],[c]select=%select3%%ptsAdjust%[blk2],[blk]format=gbrp[v1],[wht]format=gbrp[v2],[v1][v2]blend=all_mode=difference,negate,format=yuv420p[map],[map]setpts=0.5*PTS[alphaMap],[alphaMap]split=2[alphaMapUse][out2],[out2]split [ia][ka];[ia] palettegen [pa];[ka]fifo[ma];[ma][pa] paletteuse=dither=none[out3],[alphaMapUse]format=argb,geq=a='255':r='max(max(r(X,Y),g(X,Y)),b(X,Y))':g='max(max(r(X,Y),g(X,Y)),b(X,Y))':b='max(max(r(X,Y),g(X,Y)),b(X,Y))'[alphaMax],[blk2]setpts=0.5*PTS[d],[d][alphaMax]alphamerge[transparent1],[transparent1]format=argb,geq=a='alpha(X,Y)':r='min(255,r(X,Y)*(255/alpha(X,Y)))':g='min(255,g(X,Y)*(255/alpha(X,Y)))':b='min(255,b(X,Y)*(255/alpha(X,Y)))',split [i][k];[i] palettegen [p];[k]fifo[m];[m][p] paletteuse=dither=none:alpha_threshold=120" -q:v 0 -r 50 "%~dp1\fullTransparent - %~n1.%outputExt%" -map "[out3]" -q:v 0 -r 50 "%~dp1\alphaMap - %~n1.%outputExt%"
 goto endExtSelect
 
 :apngSelect
