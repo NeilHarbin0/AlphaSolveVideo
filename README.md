@@ -22,11 +22,15 @@ Download the latest release zip from the [releases page](https://github.com/Neil
 
 3. Record gameplay via `Dolphin Movie` -> `Dump Frames`, selecting it again when you want to stop recording. The quality offered by this feature is important as the solver is sensitive to small artifacts that may appear with other recording techniques, especially when the recording is not perfectly synchronized, and frames are skipped.
 
-4. Drag and drop the recording on one of the various `SolveTo???.bat` scripts depending on the type of output file you desire (default animated png). This will generate several files in the directory of the dragged video file for the alpha map and transparent outputs. Several intermediate files will also be created and deleted in the same location during the process.
+   - `Use Lossless Codec (FFV1)` or similar should be enabled in `Options` -> `Graphics Settings` -> `Frame Dumping` if it is not already checked by default
+   - Ensure the first few frames show at least a miniscule physics change visible to the naked eye. Do not begin the recording in frame advance mode, paused, or in a near motionless animation.
+   - Ensure the first two frames contain at least a small portion of background color visible. Do not begin the recording in menus, or extremely zoomed into to stage/character geometry.
+
+5. Drag and drop the recording on one of the various `SolveTo???.bat` scripts depending on the type of output file you desire (default animated png). This will generate several files in the directory of the dragged video file for the alpha map and transparent outputs. Several intermediate files will also be created and deleted in the same location during the process.
 
     - Small example videos are available in the Resources folder which can be used to drag and drop
 
-5. Hopefully wherever you plan to use the output files supports transparency for that specific file.
+6. Hopefully wherever you plan to use the output files supports transparency for that specific file.
 
     - Animated png is recommended for high quality short content like documentation, though browser support varies.
     - Discord has some support for embedded webm, though the quality of the webm output often has worse artifacts than other formats.
@@ -47,7 +51,9 @@ For the video solving script, there is a bit of detection in seeing if the first
 
 ![Solved Transparency](https://github.com/NeilHarbin0/AlphaSolveVideo/blob/main/Resources/Readme%20Examples/Demo.png?raw=true)
 
-*Warning: It is possible that this detection fails, leading to strange chromatic edged outputs. I hope to improve this in the future, but if it happens to you, please notify me so I can help. Otherwise you can try swapping isBlack and isWhite tags in AlphaSolve.bat, or swapping firstPair and secondPair.*
+*Warning: It is possible that pair detection fails, leading to strange chromatic edged outputs or ghosting. Please ensure the first 3 frames of the video contain at least a tiny bit of visible physics change. Otherwise you can try temporarily swapping swapping :firstPair and :secondPair labels in AlphaSolve.bat.*
+
+*Warning: It is possible that background color detection can fail. This can lead to strange white outlines around subject content, and certain particle effects losing all of their color. If this happens to you, please let me know. Otherwise you can try temporarily swapping swapping :isBlack and :isWhite labels in AlphaSolve.bat.*
 
 ## Other "Worse" Approaches
 Below are images of other approaches which generally miss partial transparency, leading to the inability to place your transparent image onto any background with accurate color. They also tend to break down at low resolutions around the edges.
