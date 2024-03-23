@@ -2,6 +2,8 @@
 
 This repo holds scripts that when combined with high quality recordings and special gecko codes in SSBM, can extract high quality transparent foreground content from the game.
 
+![Animated gif example of Battlefield](Resources/Readme%20Examples/sideBySide.gif)
+
 To apply the technique to images instead of video recordings, see [PdnAlphaSolve](https://github.com/NeilHarbin0/PdnAlphaSolve).
 
 **EPILEPSY WARNING: Included example videos within the Resources folder as well as videos required for this technique contain constant black and white strobing at 30Hz and may present risks to individuals with epilepsy.**
