@@ -22,19 +22,24 @@ Download the latest release zip from the [releases page](https://github.com/Neil
 
 3. Record gameplay via `Dolphin Movie` -> `Dump Frames`, selecting it again when you want to stop recording. The quality offered by this feature is important as the solver is sensitive to small artifacts that may appear with other recording techniques, especially when the recording is not perfectly synchronized, and frames are skipped.
 
-   - `Use Lossless Codec (FFV1)` or similar should be enabled in `Options` -> `Graphics Settings` -> `Frame Dumping` if it is not already checked by default
+   - `Use Lossless Codec (FFV1)` or similar should be enabled in `Options` -> `Graphics Settings` -> `Advanced` -> `Frame Dumping` if it is not already checked by default
    - Ensure the first few frames show at least a miniscule physics change visible to the naked eye. Do not begin the recording in frame advance mode, paused, or in a near motionless animation.
    - Ensure the first two frames contain at least a small portion of background color visible. Do not begin the recording in menus, or extremely zoomed into to stage/character geometry.
 
-5. Drag and drop the recording on one of the various `SolveTo???.bat` scripts depending on the type of output file you desire (default animated png). This will generate several files in the directory of the dragged video file for the alpha map and transparent outputs. Several intermediate files will also be created and deleted in the same location during the process.
+4. Drag and drop the recording on one of the various `SolveTo???.bat` scripts depending on the type of output file you desire (default animated png). This will generate several files in the directory of the dragged video file for the alpha map and transparent outputs. Several intermediate files will also be created and deleted in the same location during the process.
 
     - Small example videos are available in the Resources folder which can be used to drag and drop
 
-6. Hopefully wherever you plan to use the output files supports transparency for that specific file.
+5. Hopefully wherever you plan to use the output files supports transparency for that specific file.
 
     - Animated png is recommended for high quality short content like documentation, though browser support varies.
     - Discord has some support for embedded webm, though the quality of the webm output often has worse artifacts than other formats.
     - Other formats are to hopefully cover various video editing software for content creators.
+  
+## Optional
+
+1. Set Dolphin `Options` -> `Configuration` -> `General` -> `Speed Limit` to 200%. This will allow the game to run at seemingly normal speed aside from audio, and can help reduce the harshness of the strobing effect to the eye as long as your monitor supports the higher fps. Unfortunately, dumping frames will likely tank FPS back down substantially.
+2. Reduce Dolphin window size to a smaller reasonable resolution, or dump at a smaller internal resolution via `Options` -> `Graphics Settings` -> `Enhancements`-> `Internal Resolutions` and `Options` -> `Graphics Settings` -> `Advanced` -> `Frame Dumping` -> `Dump at Internal Resolution`. A 30 second 720p frame dumped video can be around 250MB, with higher resolutions costing even more. Large resolutions will work, it will just make large files that take much longer to process.
 
 ## The Technique
 The following process is applied to each frame pair in the video.
