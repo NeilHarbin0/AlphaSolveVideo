@@ -54,7 +54,7 @@ The technique can produce an alpha map and the fully transparent subject.
 
 <img src='Resources/Readme%20Examples/MethodAlphaSolveMap.png?raw=true' width='400'><img src='Resources/Readme%20Examples/MethodAlphaSolve.png?raw=true' width='400'>
 
-For the video solving script, there is a bit of detection in seeing if the first frame is black or white, followed by detection of black->white or white-black pairs. With this information, the specific frames that need to be compared are known, extracted from the video, and used to generate the outputs.
+For the video solving script, there is a bit of detection in seeing if the first frame is black or white, followed by detection of black->white or white->black pairs. With this information, the specific frames that need to be compared are known, extracted from the video, and used to generate the outputs.
 
 ![Solved Transparency](Resources/Readme%20Examples/Demo.png?raw=true)
 
