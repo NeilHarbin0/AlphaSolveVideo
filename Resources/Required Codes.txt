@@ -12,7 +12,7 @@ C21A4DA0 00000003
 $(EPILEPSY WARNING) Flicker Background Black/White asm v5 [NeilHarbin0, internetexplorer, doqtor kirby]
 *Changes the background color between black and white every other physics frame
 *Use in combination with other codes which disable specific stage backgrounds
-*Writes to a spot in memory to activate 120 fps mode for Slippi playback compatability
+*Writes to a spot in memory to activate 120 fps mode for Slippi playback compatibility
 C21A503C 0000000C
 3E808043 62942A2C
 3A604CB8 3A734CB8
