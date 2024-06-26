@@ -9,19 +9,23 @@ C21A4DA0 00000003
 20020004 00000000
 04019860 4bfffd9d
 
-$(EPILEPSY WARNING) Flicker Background Black/White asm v3 [NeilHarbin0]
-C21a503c 00000008
-3E808045 62942C70
-82740000 2C13FF00
-41820018 3A6000FF
-9A740000 9A740001
-9A740002 48000014
-3A600000 9A740000
+$(EPILEPSY WARNING) Flicker Background Black/White asm v5 [NeilHarbin0, internetexplorer, doqtor kirby]
+*Changes the background color between black and white every other physics frame
+*Use in combination with other codes which disable specific stage backgrounds
+*Writes to a spot in memory to activate 120 fps mode for Slippi playback compatability
+C21A503C 0000000C
+3E808043 62942A2C
+3A604CB8 3A734CB8
+92740000 3A600014
+9A740001 3E808045
+62942C70 82740000
+2C13FF00 41820018
+3A6000FF 9A740000
 9A740001 9A740002
-38600000 00000000
-
-$120 fps mode [internetexplorer, doqtor kirby]
-04432A2C 00149970
+48000014 3A600000
+9A740000 9A740001
+9A740002 38600000
+60000000 00000000
 
 $Disable Dreamland Background [NeilHarbin0]
 04210830 60000000

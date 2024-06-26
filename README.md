@@ -15,9 +15,9 @@ Download the latest release zip from the [releases page](https://github.com/Neil
 
 2. Set up your SSBM gecko codes to include and enable all required codes (only Dreamland and BF background disabling codes included by default). [Required codes](Resources/Required%20Codes.txt) can be found in the Resources folder.
 
-    - `120 FPS` mode will allow two separate frames with different background colors without physics advancing
     - `Increase Input Timing Accuracy` will ensure black->white frame pairs always stay in the same order
     - `(EPILEPSY WARNING) Flicker Background Black/White` will flash the screen black/white each physics frame to enable the alpha solving technique
+      - This code includes a modified 120 FPS mode code to allow two separate frames with different background colors without physics advancing, as the normal 120 FPS code doesn't work with Slippi playback
     - Disable background codes are required so that the flickering background can be seen
     - `Reduce Debug Develop` lag code ensures accurate frame information in rare situations
     - [Optional codes](Resources/Optional%20Codes.txt) that can help or improve quality of documented content are also available in the same Resources folder.
@@ -25,6 +25,7 @@ Download the latest release zip from the [releases page](https://github.com/Neil
 3. Record gameplay via `Dolphin Movie` -> `Dump Frames`, selecting it again when you want to stop recording. The quality offered by this feature is important as the solver is sensitive to small artifacts that may appear with other recording techniques, especially when the recording is not perfectly synchronized, and frames are skipped.
 
    - `Use Lossless Codec (FFV1)` or similar should be enabled in `Options` -> `Graphics Settings` -> `Advanced` -> `Frame Dumping` if it is not already checked by default
+     - If using Slippi Dolphin, you can enable FFV1 in the `GFX.ini` located in the applications config folder `%AppData%\Slippi Launcher\playback\User\Config` like `UseFFV1 = True`
    - Ensure the first few frames show at least a miniscule physics change visible to the naked eye. Do not begin the recording in frame advance mode, paused, or in a near motionless animation.
    - Ensure the first two frames contain at least a small portion of background color visible. Do not begin the recording in menus, or extremely zoomed into to stage/character geometry.
 
