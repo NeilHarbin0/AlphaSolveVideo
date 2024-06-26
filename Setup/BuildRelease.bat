@@ -8,7 +8,7 @@ xcopy "..\Resources\*.txt" ".\bin\Release\Resources" /c /i /y
 rem Copy ffmpeg
 xcopy "..\packages\ffmpeg-6.0-full_build\bin\ffmpeg.exe" ".\bin\Release\" /c /y
 rem Copy license
-xcopy "..\LICENSE" ".\bin\Release\" /c /y
+xcopy "..\LICENSE.txt" ".\bin\Release\" /c /y
 
 rem Zip bin into a release
 "C:\Program Files\7-Zip\7z.exe" a ".\bin\AlphaSolveVideo.zip" ".\bin\Release\*" -aoa
