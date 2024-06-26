@@ -1,4 +1,5 @@
 rem Copy files to a release directory
+rmdir ".\bin\Release" /s /q
 rem Copy scripts
 xcopy "..\Scripts\*.bat" ".\bin\Release\Scripts" /c /i /y
 rem Copy example videos
