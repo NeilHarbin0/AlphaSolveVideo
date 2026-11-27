@@ -1,0 +1,86 @@
+# Builds the headless Slippi playback Dolphin for Linux (x86_64 and arm64) with this repo's patches
+# (tools/dolphin-build/build-linux-mainline.py), and uploads packages/slippi-playback-mainline as a tarball, which keeps
+# the program executable (artifacts don't keep file permissions). Then checks that the x86_64 package starts on six
+# distributions. Run it by hand: Actions tab > "Linux playback Dolphin" > Run workflow, or
+# `gh workflow run dolphin-linux.yml`. Unpack the tarball into packages/ (docs/plan-linux.md).
+name: Linux playback Dolphin
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash  # a container's default is sh
+
+jobs:
+  build:
+    name: Build the Linux package (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86_64, runner: ubuntu-24.04 }
+          - { arch: aarch64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    # Ubuntu 22.04's glibc (2.35) sets the oldest Linux the package runs on. A container rather than the
+    # ubuntu-22.04 runner, which GitHub retires in April 2027.
+    container: ubuntu:22.04
+    timeout-minutes: 150
+    env:
+      ALPHASOLVE_CACHE: /asv
+    steps:
+      - name: Install the build packages
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential git pkg-config \
+            curl ca-certificates xz-utils python3 python3-venv nasm zlib1g-dev libasound2-dev libegl-dev
+      - uses: actions/checkout@v5
+      - name: Install Rust 1.88.0
+        run: |
+          curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.88.0 --component rustfmt
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Build
+        run: python3 tools/dolphin-build/build-linux-mainline.py all
+      - name: Pack the package as a tarball
+        run: tar -C packages -czf slippi-playback-mainline-linux-${{ matrix.arch }}.tar.gz slippi-playback-mainline
+      - name: Upload the package
+        uses: actions/upload-artifact@v6
+        with:
+          name: slippi-playback-mainline-linux-${{ matrix.arch }}
+          path: slippi-playback-mainline-linux-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
+      - name: Upload the build logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-logs-linux-${{ matrix.arch }}
+          path: /asv/*.log
+          if-no-files-found: ignore
+
+  portability:
+    name: Starts on ${{ matrix.image }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ "ubuntu:22.04", "ubuntu:24.04", "debian:12", "debian:13", "fedora:latest", "archlinux:latest" ]
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    steps:
+      - name: Install only the libraries the package needs from the system
+        run: |
+          . /etc/os-release
+          case "$ID" in
+            ubuntu|debian) apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libegl1 libasound2 ;;
+            fedora) dnf install -y tar gzip libglvnd-egl alsa-lib ;;
+            arch) pacman -Sy --noconfirm libglvnd alsa-lib ;;
+          esac
+      - uses: actions/download-artifact@v7
+        with:
+          name: slippi-playback-mainline-linux-x86_64
+      - name: Run --help
+        run: |
+          tar -xzf slippi-playback-mainline-linux-x86_64.tar.gz
+          slippi-playback-mainline/dolphin-emu-nogui --help > help.txt 2>&1 || true
+          cat help.txt
+          grep -q -- --exit-on-end help.txt

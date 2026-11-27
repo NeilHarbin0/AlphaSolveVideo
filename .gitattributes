@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Line endings that must not depend on the platform or on core.autocrlf:
+# git apply needs the patches as LF (Dolphin's sources are LF), and sh scripts break with CRLF.
+*.patch text eol=lf
+*.sh text eol=lf
+# cmd.exe can misread batch files with LF line endings.
+*.bat text eol=crlf

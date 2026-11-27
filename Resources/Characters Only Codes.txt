@@ -1,0 +1,53 @@
+Codes for rendering only the characters (the stage, its particles, the HUD and screen flashes are not drawn).
+Every code here only changes what is drawn; game logic, collision and RNG are untouched, so replays stay in sync.
+Use them with the Required Codes (input timing + flicker) and without any stage background code.
+
+$Hide Stage - Characters Only [AlphaSolveVideo]
+*Skips drawing every stage model on every stage: main stage, platforms, background, moving parts
+*(FoD platforms, Stadium transformations and screen, Randall, FD backgrounds...). Fighter shadows go too:
+*Melee projects them onto the stage. Use instead of the stage background codes (none are needed).
+*Display only: Camera_80030AC4 ("is the stage visible?", the switch behind Develop Mode's X + D-pad down
+*"hide stage") always answers no. Only the stage draw callback (grDisplay_801C5DB0) and the collision-debug
+*overlay read it; collision, hazards, timers and RNG are untouched.
+04030AC4 38600000
+04030AC8 4E800020
+
+$Hide Stage Particles [AlphaSolveVideo]
+*Skips drawing particles from bank 30, where the stage's particle data is loaded (Battlefield sparkles,
+*Pokemon Stadium fireworks, FoD and Dream Land particles...). Fighter, item and common effects use other banks.
+*Display only: hooks the per-particle loop of psDispParticles; particles are still spawned and simulated.
+C23A02B4 00000005
+881E0008 2C00001E
+40820014 3C00803A
+6000388C 7C0903A6
+4E800420 C03E004C
+60000000 00000000
+
+$Hide HUD and Overlays [AlphaSolveVideo]
+*The HUD camera draws nothing: percents, stocks, timer, Ready/GO/GAME!, P1/CP indicators, HUD particles.
+*The off-screen magnifying-glass bubbles and name tags see the HUD as hidden (ifAll_IsHUDHidden returns true).
+*Display only: the HUD still runs (unlike "Optional: Hide HUD", which skips creating it); only drawing stops.
+042F36D4 48000024
+042F36B0 38600001
+
+$Hide Screen Flash [AlphaSolveVideo]
+*Skips the full-screen flash/fade quad: strong hits tint the whole screen for about 10 frames, which would
+*otherwise become a semi-transparent veil over the entire transparent video. Display only (render callback).
+0401FEC4 4E800020
+
+$Hide Shy Guys (Yoshi's Story) [AlphaSolveVideo]
+*Shy Guys keep flying and can still be hit (they are items; removing them would change the game).
+*Only their draw callback is replaced with an empty function. Display only.
+043F4CB0 8021A114
+
+$Hide Items and Projectiles [AlphaSolveVideo]
+*Optional (not part of the characters-only set). Main camera no longer draws GX link 6: held/thrown items and projectiles (missiles, lasers, turnips...).
+*Their flames and trails are effects (see Hide Effects). Display only.
+04031238 38600000
+040312E4 39000000
+040313A0 39600000
+
+$Hide Effects [AlphaSolveVideo]
+*Optional (not part of the characters-only set). Main camera no longer draws GX link 7: all effects and particles (hit sparks, dust, smoke, KO blasts,
+*entry beams, item flames). Display only.
+04030434 38600000

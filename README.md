@@ -8,7 +8,39 @@ To apply the technique to images instead of video recordings, see [PdnAlphaSolve
 
 **EPILEPSY WARNING: Included example videos within the Resources folder as well as videos required for this technique contain constant black and white strobing at 30Hz and may present risks to individuals with epilepsy.**
 
-## Usage
+## Automated Headless `.slp` Rendering (Windows, macOS, Linux)
+
+Render Slippi `.slp` replays directly to transparent (or opaque) video without opening a flashing Dolphin window and without Python or Node.js installed.
+
+### Setup
+1. **FFmpeg:** Place `ffmpeg` (`ffmpeg.exe` on Windows) in the repo root, `packages/ffmpeg/`, or on your `PATH`.
+2. **Headless Playback Dolphin:** Download the artifact for your platform from GitHub Actions (`Windows playback Dolphin`, `macOS playback Dolphin`, or `Linux playback Dolphin`) and unpack it into `packages/slippi-playback-mainline/` (or build it with `tools/dolphin-build/`).
+3. **Melee NTSC 1.02 ISO:** Detected automatically from Slippi Launcher settings, or passed via `--iso PATH` / `MELEE_ISO`.
+
+### Windows (Batch Scripts)
+Drag and drop a `.slp` file onto one of the preset scripts in `Scripts\`, or run `Scripts\RenderSlp.bat` from Command Prompt:
+- `Scripts\RenderNoStageNoHUD.bat` — characters/items/effects only, no HUD (all stages)
+- `Scripts\RenderNoStageWithHUD.bat` — characters/items/effects only, with HUD (all stages)
+- `Scripts\RenderWithStageNoHUD.bat` — stage geometry kept, no HUD (Dream Land, Battlefield)
+- `Scripts\RenderWithStageWithHUD.bat` — stage geometry kept, with HUD (Dream Land, Battlefield)
+- `Scripts\RenderNoGecko.bat` — opaque render with no AlphaSolve Gecko codes (all stages)
+
+```bat
+Scripts\RenderSlp.bat replay.slp --no-stage --no-hud --format png
+Scripts\RenderSlp.bat replay.slp --stage --hud --format prores
+Scripts\RenderSlp.bat replay.slp --no-gecko --format mp4
+```
+
+### macOS & Linux (Shell Scripts)
+```sh
+Scripts/renderslp.sh replay.slp --no-stage --no-hud --format mov
+Scripts/renderslp.sh replay.slp --stage --hud --format png
+Scripts/renderslp.sh replay.slp --no-gecko --format mp4
+```
+
+You can also solve any pre-recorded `.avi`/`.mkv` flicker video directly with `Scripts\AlphaSolve.bat` (Windows) or `Scripts/alphasolve.sh` (macOS/Linux).
+
+## Manual Usage (Video Recordings)
 Download the latest release zip from the [releases page](https://github.com/NeilHarbin0/AlphaSolveVideo/releases). Extract the zip to preferably a dedicated folder. 
 
 1. You will need Dolphin emulator that supports lossless .avi output via framedump. Tested and working with Dolphin 5.0-17995. Find output path under `Options` -> `Configuration` -> `Paths` -> `Dump Path`.
