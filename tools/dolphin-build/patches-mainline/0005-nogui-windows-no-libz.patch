@@ -1,0 +1,14 @@
+diff --git a/Source/Core/DolphinNoGUI/CMakeLists.txt b/Source/Core/DolphinNoGUI/CMakeLists.txt
+index 5b72b57..10d1f4e 100644
+--- a/Source/Core/DolphinNoGUI/CMakeLists.txt
++++ b/Source/Core/DolphinNoGUI/CMakeLists.txt
+@@ -28,7 +28,8 @@ set_target_properties(dolphin-nogui PROPERTIES OUTPUT_NAME dolphin-emu-nogui)
+ target_link_libraries(dolphin-nogui
+ PUBLIC
+   slippi_rust_extensions
+-  z
++  # the system zlib (-lz): Windows has none, and its Qt build links slippi_rust_extensions without it
++  $<$<NOT:$<PLATFORM_ID:Windows>>:z>
+ PRIVATE
+   core
+   uicommon

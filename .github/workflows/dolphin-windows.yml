@@ -1,0 +1,45 @@
+# Builds the headless Slippi playback Dolphin for Windows with this repo's patches
+# (tools/dolphin-build/build-windows-mainline.py) and uploads packages/slippi-playback-mainline as a zip.
+# Run it by hand: Actions tab > "Windows playback Dolphin" > Run workflow, or `gh workflow run dolphin-windows.yml`.
+# Unpack the artifact into packages\slippi-playback-mainline on the Windows PC (docs/plan-windows-remaining.md).
+name: Windows playback Dolphin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build the Windows package
+    runs-on: windows-2022
+    timeout-minutes: 150
+    env:
+      # A short work folder keeps the Rust build's paths under Windows' 260-character limit.
+      ALPHASOLVE_CACHE: C:\asv
+    steps:
+      - name: Keep LF line endings (the patches need them)
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Load the MSVC x64 environment
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+      - name: Install Rust 1.88.0
+        run: rustup toolchain install 1.88.0 --profile minimal --component rustfmt
+      - name: Build
+        run: python tools/dolphin-build/build-windows-mainline.py all
+      - name: Upload the package
+        uses: actions/upload-artifact@v6
+        with:
+          name: slippi-playback-mainline-windows
+          path: packages/slippi-playback-mainline
+          if-no-files-found: error
+      - name: Upload the build logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-logs
+          path: C:\asv\*.log
+          if-no-files-found: ignore

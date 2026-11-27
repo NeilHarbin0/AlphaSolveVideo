@@ -1,0 +1,14 @@
+diff --git a/Source/Core/DolphinNoGUI/MainNoGUI.cpp b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+index a37fd6c..8560343 100644
+--- a/Source/Core/DolphinNoGUI/MainNoGUI.cpp
++++ b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+@@ -342,6 +342,9 @@ int main(int argc, char* argv[])
+ #ifdef _WIN32
+   signal(SIGINT, signal_handler);
+   signal(SIGTERM, signal_handler);
++  // Ctrl+Break: the console signal another program can aim at just this process group
++  // (GenerateConsoleCtrlEvent). Windows never sends SIGTERM, so this is how a render is stopped cleanly.
++  signal(SIGBREAK, signal_handler);
+ #else
+   // Shut down cleanly on SIGINT and SIGTERM
+   struct sigaction sa;

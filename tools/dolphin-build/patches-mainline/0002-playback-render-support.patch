@@ -1,0 +1,216 @@
+diff --git a/Source/Core/Core/HW/EXI/EXI_DeviceSlippi.cpp b/Source/Core/Core/HW/EXI/EXI_DeviceSlippi.cpp
+index 653e3d5..4be6d72 100644
+--- a/Source/Core/Core/HW/EXI/EXI_DeviceSlippi.cpp
++++ b/Source/Core/Core/HW/EXI/EXI_DeviceSlippi.cpp
+@@ -3,6 +3,7 @@
+ // Refer to the license.txt file included.
+ 
+ #include <algorithm>
++#include <iostream>
+ #include <semver/include/semver200.h>
+ #include <utility>  // std::move
+ 
+@@ -52,6 +53,20 @@ extern std::unique_ptr<SlippiPlaybackStatus> g_playback_status;
+ extern std::unique_ptr<SlippiReplayComm> g_replay_comm;
+ bool g_need_input_for_frame;
+ 
++#ifdef IS_PLAYBACK
++// The replay is over (or being replaced): stop frame dumping and tell --cout listeners.
++static void endPlaybackOutput(s32 frame_idx)
++{
++  const bool was_playing = g_playback_status->in_slippi_playback;
++  const auto& slippi_config = SConfig::GetSlippiConfig();
++  if (was_playing && slippi_config.cout_enabled)
++    std::cout << "[PLAYBACK_TERMINATED] " << frame_idx << std::endl;
++  g_playback_status->in_slippi_playback = false;
++  if (was_playing && slippi_config.exit_on_end)
++    Host_Message(HostMessageID::WMUserStop);
++}
++#endif
++
+ #ifdef LOCAL_TESTING
+ bool is_local_connected = false;
+ int local_chat_message_id = 0;
+@@ -748,6 +763,10 @@ void CEXISlippi::prepareGameInfo(u8* payload)
+ 
+   // Reset playback frame to begining
+   g_playback_status->current_playback_frame = Slippi::GAME_FIRST_FRAME;
++#ifdef IS_PLAYBACK
++  // The savestate thread used to set this; it is disabled, and frame dumping keys off this flag.
++  g_playback_status->in_slippi_playback = true;
++#endif
+ 
+   // Initialize replay related threads if not viewing rollback versions of relays
+   if (replay_comm_settings.rollback_display_method == "off" &&
+@@ -921,6 +940,9 @@ void CEXISlippi::prepareFrameData(u8* payload)
+   {
+     INFO_LOG_FMT(SLIPPI, "Killing game because we are past end_frame");
+     m_read_queue.push_back(FRAME_RESP_TERMINATE);
++#ifdef IS_PLAYBACK
++    endPlaybackOutput(frame_idx);
++#endif
+     return;
+   }
+ 
+@@ -932,6 +954,9 @@ void CEXISlippi::prepareFrameData(u8* payload)
+   if (is_new_replay)
+   {
+     m_read_queue.push_back(FRAME_RESP_TERMINATE);
++#ifdef IS_PLAYBACK
++    endPlaybackOutput(frame_idx);
++#endif
+     return;
+   }
+ 
+@@ -1018,6 +1043,9 @@ void CEXISlippi::prepareFrameData(u8* payload)
+     {
+       ERROR_LOG_FMT(EXPANSIONINTERFACE, "Game should terminate on frame {} [{}]", frame_idx,
+                     frame_idx);
++#ifdef IS_PLAYBACK
++      endPlaybackOutput(frame_idx);
++#endif
+     }
+ 
+     return;
+@@ -1029,6 +1057,10 @@ void CEXISlippi::prepareFrameData(u8* payload)
+   if (frame_idx > g_playback_status->current_playback_frame)
+   {
+     g_playback_status->current_playback_frame = frame_idx;
++#ifdef IS_PLAYBACK
++    if (SConfig::GetSlippiConfig().cout_enabled && frame_idx >= watch_settings.start_frame)
++      std::cout << "[CURRENT_FRAME] " << frame_idx << std::endl;
++#endif
+   }
+   else if (comm_settings.rollback_display_method != "off")
+   {
+@@ -1149,6 +1181,21 @@ void CEXISlippi::prepareIsFileReady()
+ 
+   INFO_LOG_FMT(SLIPPI, "EXI_DeviceSlippi.cpp: Replay file loaded successfully!?");
+ 
++#ifdef IS_PLAYBACK
++  if (SConfig::GetSlippiConfig().cout_enabled)
++  {
++    // Same markers as Ishiiruka's playback build prints with --cout
++    auto watch_settings = g_replay_comm->current;
++    auto game_end_method = m_current_game->GetGameEndMethod();
++    std::cout << "[FILE_PATH] " << watch_settings.path << std::endl;
++    if (game_end_method == 0 || game_end_method == 7)
++      std::cout << "[LRAS]" << std::endl;
++    std::cout << "[PLAYBACK_START_FRAME] " << watch_settings.start_frame << std::endl;
++    std::cout << "[GAME_END_FRAME] " << m_current_game->GetLatestIndex() << std::endl;
++    std::cout << "[PLAYBACK_END_FRAME] " << watch_settings.end_frame << std::endl;
++  }
++#endif
++
+   // Clear playback control related vars
+   g_playback_status->resetPlayback();
+ 
+diff --git a/Source/Core/Core/Slippi/SlippiConfig.h b/Source/Core/Core/Slippi/SlippiConfig.h
+index 859ebce..00c5ad6 100644
+--- a/Source/Core/Core/Slippi/SlippiConfig.h
++++ b/Source/Core/Core/Slippi/SlippiConfig.h
+@@ -27,5 +27,7 @@ struct Config
+   bool oc_enable = true;
+   float oc_factor = 1.0f;
+   std::string slippi_input = ""; // Putting the default value here doesn't work for some reason
++  bool cout_enabled = false;  // --cout: print playback progress markers to stdout
++  bool exit_on_end = false;   // --exit-on-end: stop Dolphin when playback terminates
+ };
+ }  // namespace Slippi
+diff --git a/Source/Core/DolphinNoGUI/MainNoGUI.cpp b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+index 976c1a6..ffba9f8 100644
+--- a/Source/Core/DolphinNoGUI/MainNoGUI.cpp
++++ b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+@@ -320,6 +320,8 @@ int main(int argc, char* argv[])
+   {
+     SConfig::GetSlippiConfig().slippi_input = "Slippi/playback.txt";
+   }
++  SConfig::GetSlippiConfig().cout_enabled = options.is_set("cout");
++  SConfig::GetSlippiConfig().exit_on_end = options.is_set("exit_on_end");
+ #endif
+ 
+   if (save_state_path && !game_specified)
+diff --git a/Source/Core/UICommon/CommandLineParse.cpp b/Source/Core/UICommon/CommandLineParse.cpp
+index 11e7643..d29e702 100644
+--- a/Source/Core/UICommon/CommandLineParse.cpp
++++ b/Source/Core/UICommon/CommandLineParse.cpp
+@@ -133,6 +133,12 @@ std::unique_ptr<optparse::OptionParser> CreateParser(ParserOptions options)
+   parser->add_option("--hide-seekbar")
+       .action("store_true")
+       .help("Disable and hide seekbar during playback");
++  parser->add_option("--cout")
++      .action("store_true")
++      .help("Print playback progress markers ([CURRENT_FRAME] etc.) to stdout");
++  parser->add_option("--exit-on-end")
++      .action("store_true")
++      .help("Stop Dolphin when Slippi playback terminates");
+ #endif
+ 
+   return parser;
+diff --git a/Source/Core/VideoCommon/FrameDumpFFMpeg.cpp b/Source/Core/VideoCommon/FrameDumpFFMpeg.cpp
+index 44ec0a6..e2be88d 100644
+--- a/Source/Core/VideoCommon/FrameDumpFFMpeg.cpp
++++ b/Source/Core/VideoCommon/FrameDumpFFMpeg.cpp
+@@ -270,6 +270,18 @@ bool FFMpegFrameDump::CreateVideoFile()
+   m_context->codec->gop_size = 1;
+   m_context->codec->level = 1;
+ 
++#ifdef IS_PLAYBACK
++  if (codec->id == AV_CODEC_ID_FFV1)
++  {
++    // FFV1 version 3 splits each frame into slices that are encoded on several threads, so the
++    // encoder keeps up when replays are rendered faster than real time.
++    m_context->codec->level = 3;
++    m_context->codec->slices = 4;
++    m_context->codec->thread_count = 4;
++    m_context->codec->thread_type = FF_THREAD_SLICE;
++  }
++#endif
++
+   AVPixelFormat pix_fmt = AV_PIX_FMT_NONE;
+ 
+   const std::string pixel_format_string = Config::Get(Config::GFX_DUMP_PIXEL_FORMAT);
+diff --git a/Source/Core/VideoCommon/Present.cpp b/Source/Core/VideoCommon/Present.cpp
+index cb0605f..85d478e 100644
+--- a/Source/Core/VideoCommon/Present.cpp
++++ b/Source/Core/VideoCommon/Present.cpp
+@@ -23,6 +23,28 @@
+ #include "VideoCommon/VideoEvents.h"
+ #include "VideoCommon/Widescreen.h"
+ 
++#ifdef IS_PLAYBACK
++#include "Core/Config/MainSettings.h"
++#include "Core/Slippi/SlippiPlayback.h"
++#include "Core/Slippi/SlippiReplayComm.h"
++
++extern std::unique_ptr<SlippiPlaybackStatus> g_playback_status;
++extern std::unique_ptr<SlippiReplayComm> g_replay_comm;
++
++// When dumping frames, only record the replay itself: not menus or the waiting screen, not
++// fast-forwarded frames, and only strictly between the comm file's startFrame and endFrame
++// (the same rule Ishiiruka's playback build used).
++static bool IsPlaybackFrameDumpable()
++{
++  if (!g_playback_status || !g_replay_comm || !g_playback_status->in_slippi_playback)
++    return false;
++  if (g_playback_status->is_hard_FFW || g_playback_status->is_soft_FFW)
++    return false;
++  const s32 frame = g_playback_status->current_playback_frame;
++  return g_replay_comm->current.start_frame < frame && frame < g_replay_comm->current.end_frame;
++}
++#endif
++
+ std::unique_ptr<VideoCommon::Presenter> g_presenter;
+ 
+ namespace VideoCommon
+@@ -232,6 +254,10 @@ void Presenter::ImmediateSwap(u32 xfb_addr, u32 fb_width, u32 fb_stride, u32 fb_
+ 
+ void Presenter::ProcessFrameDumping(u64 ticks) const
+ {
++#ifdef IS_PLAYBACK
++  if (Config::Get(Config::MAIN_MOVIE_DUMP_FRAMES) && !IsPlaybackFrameDumpable())
++    return;
++#endif
+   if (g_frame_dumper->IsFrameDumping() && m_xfb_entry)
+   {
+     MathUtil::Rectangle<int> target_rect;

@@ -1,0 +1,14 @@
+diff --git a/Externals/imgui/CMakeLists.txt b/Externals/imgui/CMakeLists.txt
+index dd6773b..deff07d 100644
+--- a/Externals/imgui/CMakeLists.txt
++++ b/Externals/imgui/CMakeLists.txt
+@@ -21,7 +21,8 @@ target_compile_definitions(imgui
+     IMGUI_DEFINE_MATH_OPERATORS
+ )
+ # Disable interprocedural scalar replacement to make template instantiations globally visible
+-target_compile_options(imgui PRIVATE -fno-ipa-sra)
++# (GCC-only flag; Clang/AppleClang reject it)
++target_compile_options(imgui PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-ipa-sra>)
+ 
+ target_link_libraries(imgui
+ PRIVATE

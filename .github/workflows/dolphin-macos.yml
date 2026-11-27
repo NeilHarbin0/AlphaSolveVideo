@@ -1,0 +1,40 @@
+# Builds the headless Slippi playback Dolphin for macOS (Apple Silicon) with this repo's patches
+# (tools/dolphin-build/build-mac-mainline.sh) and uploads Slippi Dolphin.app as a tarball so executable
+# permissions and symlinks are preserved.
+# Run it by hand: Actions tab > "macOS playback Dolphin" > Run workflow, or `gh workflow run dolphin-macos.yml`.
+name: macOS playback Dolphin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build the macOS package (arm64)
+    runs-on: macos-15
+    timeout-minutes: 120
+    env:
+      ALPHASOLVE_CACHE: /tmp/asv
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install build dependencies
+        run: brew install pkgconf ninja
+      - name: Install Rust 1.88.0
+        run: |
+          rustup toolchain install 1.88.0 --profile minimal --component rustfmt --target aarch64-apple-darwin
+      - name: Build
+        run: bash tools/dolphin-build/build-mac-mainline.sh all
+      - name: Pack the app bundle as a tarball
+        run: tar -C packages/slippi-playback-mainline -czf slippi-playback-mainline-macos-arm64.tar.gz "Slippi Dolphin.app"
+      - name: Upload the package
+        uses: actions/upload-artifact@v6
+        with:
+          name: slippi-playback-mainline-macos-arm64
+          path: slippi-playback-mainline-macos-arm64.tar.gz
+          if-no-files-found: error
+      - name: Upload the build logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-logs-macos-arm64
+          path: /tmp/asv/*.log
+          if-no-files-found: ignore

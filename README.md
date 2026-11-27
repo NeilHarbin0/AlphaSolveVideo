@@ -8,7 +8,68 @@ To apply the technique to images instead of video recordings, see [PdnAlphaSolve
 
 **EPILEPSY WARNING: Included example videos within the Resources folder as well as videos required for this technique contain constant black and white strobing at 30Hz and may present risks to individuals with epilepsy.**
 
-## Usage
+## Automated Headless `.slp` Rendering (Windows, macOS, Linux)
+
+Render Slippi `.slp` replays directly to transparent (or opaque) video without opening a flashing Dolphin window and **without Python or Node.js installed at runtime**.
+
+### Modes & Stage Support
+
+| Mode | Stage | HUD | Transparent? | Stage Coverage | Codes Used |
+|---|---|---|---|---|---|
+| `--no-stage --no-hud` *(default)* | Hidden | Hidden | Yes | **All stages** | [Required](Resources/Required%20Codes.txt) + [Characters Only](Resources/Characters%20Only%20Codes.txt) |
+| `--no-stage --hud` | Hidden | Kept | Yes | **All stages** | Same, without `Hide HUD and Overlays` |
+| `--stage --no-hud` | Kept | Hidden | Yes | Dream Land, Battlefield | Input Timing + Flicker + DL/BF BG disable + `Hide HUD and Overlays` |
+| `--stage --hud` | Kept | Kept | Yes | Dream Land, Battlefield | Input Timing + Flicker + DL/BF BG disable |
+| `--opaque` *(+ `--no-hud` optional)* | Kept | Kept / Hidden | No (`fullOpaque`) | **All stages** | Input Timing (+ optional `Hide HUD and Overlays`) |
+| `--no-gecko` | Kept | Kept | No (`fullOpaque`) | **All stages** | None of AlphaSolve's codes (Slippi's built-in playback codes only) |
+
+> **Note on `--no-gecko`:** True alpha-solved transparency requires the flicker and background-hiding Gecko codes; without them, Melee draws an opaque 3D stage background and Dolphin's frame dump has no alpha channel, so `--no-gecko` outputs a standard opaque video (`fullOpaque - <name>.<ext>`).
+
+### Setup
+1. **FFmpeg:**
+   - **Windows:** Place `ffmpeg.exe` in the repo root, `packages\ffmpeg\`, `packages\ffmpeg-6.0-full_build\bin\`, or on your `PATH`.
+   - **macOS / Linux:** Install `ffmpeg` (e.g. `brew install ffmpeg` on macOS, or place `ffmpeg` in the repo root, `packages/ffmpeg/`, or `PATH`).
+2. **Headless Playback Dolphin (`dolphin-emu-nogui`):**
+   Download the artifact for your platform from GitHub Actions (or build locally with `tools/dolphin-build/`):
+   - **Windows:** Run the `Windows playback Dolphin` workflow and unpack `slippi-playback-mainline-windows` into `packages\slippi-playback-mainline\` (`dolphin-emu-nogui.exe`).
+   - **macOS (Apple Silicon):** Run `macOS playback Dolphin` and unpack `slippi-playback-mainline-macos-arm64.tar.gz` into `packages/slippi-playback-mainline/` (`Slippi Dolphin.app`), or build locally with `tools/dolphin-build/build-mac-mainline.sh`.
+   - **Linux (`x86_64` / `aarch64`):** Run `Linux playback Dolphin` and extract `slippi-playback-mainline-linux-<arch>.tar.gz` into `packages/`, or build locally with `python3 tools/dolphin-build/build-linux-mainline.py`.
+3. **Melee NTSC 1.02 ISO:** Detected automatically from Slippi Launcher's `Settings`, or passed via `--iso PATH` / `MELEE_ISO`.
+
+*(Platform status: tested end-to-end on macOS Apple Silicon across all modes; Windows `.bat` scripts and Linux/Windows/macOS CI workflows have not been executed on Windows or Linux machines yet.)*
+
+### Windows (Batch Scripts)
+Drag and drop a `.slp` file onto one of the preset scripts in `Scripts\`, or run [RenderSlp.bat](Scripts/RenderSlp.bat) from Command Prompt:
+- [RenderNoStageNoHUD.bat](Scripts/RenderNoStageNoHUD.bat) — characters/items/effects only, no HUD (all stages)
+- [RenderNoStageWithHUD.bat](Scripts/RenderNoStageWithHUD.bat) — characters/items/effects only, with HUD (all stages)
+- [RenderWithStageNoHUD.bat](Scripts/RenderWithStageNoHUD.bat) — stage geometry kept, no HUD (Dream Land, Battlefield)
+- [RenderWithStageWithHUD.bat](Scripts/RenderWithStageWithHUD.bat) — stage geometry kept, with HUD (Dream Land, Battlefield)
+- [RenderNoGecko.bat](Scripts/RenderNoGecko.bat) — opaque render with no AlphaSolve Gecko codes (all stages)
+
+Optional second argument sets output format (default `png`), or use flags directly:
+```bat
+Scripts\RenderSlp.bat replay.slp --no-stage --no-hud --format png
+Scripts\RenderSlp.bat replay.slp --stage --hud --format prores --scale 2
+Scripts\RenderSlp.bat replay.slp --no-gecko --format mp4
+```
+
+### macOS & Linux (Shell Scripts)
+```sh
+Scripts/renderslp.sh replay.slp --no-stage --no-hud --format mov
+Scripts/renderslp.sh replay.slp --stage --hud --format png --scale 2
+Scripts/renderslp.sh replay.slp --no-gecko --format mp4
+```
+
+Common options for both [RenderSlp.bat](Scripts/RenderSlp.bat) and [renderslp.sh](Scripts/renderslp.sh):
+- `--format EXT`: `png` (default APNG), `prores`, `mov`, `mkv`, `avi`, `webm`, `gif` (plus `mp4` with `--opaque` / `--no-gecko`)
+- `--scale N`: internal resolution multiplier `1`–`4` (default `1`)
+- `--raw`: dump unstretched `640x480 * scale` instead of aspect-corrected `640x528`
+- `--out DIR`: output directory (default: next to the replay)
+- `--backend NAME`: `D3D` / `D3D12` / `Vulkan` / `OGL` on Windows, `Metal` on macOS, `Vulkan` / `OGL` on Linux
+
+You can also solve any pre-recorded `.avi`/`.mkv` flicker video directly with [AlphaSolve.bat](Scripts/AlphaSolve.bat) (Windows) or [alphasolve.sh](Scripts/alphasolve.sh) (macOS/Linux).
+
+## Manual Usage (Video Recordings)
 Download the latest release zip from the [releases page](https://github.com/NeilHarbin0/AlphaSolveVideo/releases). Extract the zip to preferably a dedicated folder. 
 
 1. You will need Dolphin emulator that supports lossless .avi output via framedump. Tested and working with Dolphin 5.0-17995. Find output path under `Options` -> `Configuration` -> `Paths` -> `Dump Path`.
